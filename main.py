@@ -49,15 +49,29 @@ def cleanup(paths):
             os.remove(p)
 
 
-def run_ffmpeg(input_path, output_path):
-    cmd = [
-        FFMPEG_PATH,
-        "-y",
-        "-i", input_path,
-        "-ar", "16000",
-        "-ac", "1",
-        output_path
-    ]
+def run_ffmpeg(input_path, output_path, fmt):
+    # 根据目标格式选择编码器和参数
+    base_cmd = [FFMPEG_PATH, "-y", "-i", input_path]
+    # 统一采样率和声道，方便后续处理
+    common = ["-ar", "16000", "-ac", "1"]
+
+    fmt = fmt.lower()
+    if fmt == 'wav':
+        codec = ['-c:a', 'pcm_s16le']
+    elif fmt == 'mp3':
+        codec = ['-c:a', 'libmp3lame', '-b:a', '192k']
+    elif fmt == 'ogg':
+        codec = ['-c:a', 'libvorbis', '-b:a', '192k']
+    elif fmt == 'flac':
+        codec = ['-c:a', 'flac']
+    elif fmt in ('m4a', 'aac'):
+        codec = ['-c:a', 'aac', '-b:a', '192k']
+    elif fmt == 'opus':
+        codec = ['-c:a', 'libopus', '-b:a', '128k']
+    else:
+        codec = []
+
+    cmd = base_cmd + common + codec + [output_path]
 
     subprocess.run(
         cmd,
@@ -88,7 +102,7 @@ async def convert(background_tasks: BackgroundTasks, file: UploadFile = File(...
 
     async with semaphore:  # 控制并发
         try:
-            run_ffmpeg(input_path, output_path)
+            run_ffmpeg(input_path, output_path, fmt)
         except subprocess.TimeoutExpired:
             cleanup([input_path])
             raise HTTPException(status_code=500, detail="转换超时")

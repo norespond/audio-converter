@@ -1,3 +1,5 @@
-fastapi
+fastapi>=0.95.0
+uvicorn[standard]>=0.21.0
+python-multipart>=0.0.6fastapi
 uvicorn
 python-multipart
