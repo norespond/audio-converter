@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, BackgroundTasks, HTTPException
+from fastapi import FastAPI, File, UploadFile, BackgroundTasks, HTTPException, Form
 from fastapi.responses import FileResponse
 import os
 import uuid
@@ -11,7 +11,17 @@ app = FastAPI()
 UPLOAD_DIR = "/tmp/uploads"
 OUTPUT_DIR = "/tmp/outputs"
 FFMPEG_PATH = "ffmpeg"
+# 支持的输入/输出扩展名（输出用于验证和 MIME）
 AUDIO_EXTS = ('.ogg', '.ape', '.flac', '.mp3', '.wav', '.m4a')
+SUPPORTED_OUTPUTS = {
+    'wav': 'audio/wav',
+    'mp3': 'audio/mpeg',
+    'ogg': 'audio/ogg',
+    'flac': 'audio/flac',
+    'm4a': 'audio/mp4',
+    'aac': 'audio/aac',
+    'opus': 'audio/opus',
+}
 MAX_SIZE = 20 * 1024 * 1024  # 建议先限制 20MB
 MAX_CONCURRENT = 2  # 最大并发转换数
 
@@ -54,20 +64,25 @@ def run_ffmpeg(input_path, output_path):
         check=True,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
-        timeout=60  # 防止卡死
+        timeout=120  # 防止卡死
     )
 
 
 # ========= API =========
-@app.post("/convert_wav/")
-async def convert_wav(background_tasks: BackgroundTasks, file: UploadFile = File(...)):
+@app.post("/convert/")
+async def convert(background_tasks: BackgroundTasks, file: UploadFile = File(...), format: str = Form('wav')):
+    # 验证输入是音频并验证输出格式支持
     ext = os.path.splitext(file.filename)[-1].lower()
-    if ext not in AUDIO_EXTS:
-        raise HTTPException(status_code=400, detail="不支持的音频格式")
+    if not (file.content_type.startswith('audio/') or ext in AUDIO_EXTS):
+        raise HTTPException(status_code=400, detail="不支持的输入文件类型")
+
+    fmt = (format or 'wav').lower()
+    if fmt not in SUPPORTED_OUTPUTS:
+        raise HTTPException(status_code=400, detail=f"不支持的输出格式: {fmt}")
 
     uid = str(uuid.uuid4())
     input_path = os.path.join(UPLOAD_DIR, f"{uid}{ext}")
-    output_path = os.path.join(OUTPUT_DIR, f"{uid}.wav")
+    output_path = os.path.join(OUTPUT_DIR, f"{uid}.{fmt}")
 
     await save_file_with_limit(file, input_path)
 
@@ -85,9 +100,17 @@ async def convert_wav(background_tasks: BackgroundTasks, file: UploadFile = File
 
     return FileResponse(
         output_path,
-        media_type="audio/wav",
-        filename=f"{os.path.splitext(file.filename)[0]}.wav"
+        media_type=SUPPORTED_OUTPUTS.get(fmt, 'application/octet-stream'),
+        filename=f"{os.path.splitext(file.filename)[0]}.{fmt}"
     )
+
+
+@app.get("/ui")
+def ui():
+    index_path = os.path.join(os.path.dirname(__file__), "static", "index.html")
+    if os.path.exists(index_path):
+        return FileResponse(index_path, media_type="text/html")
+    raise HTTPException(status_code=404, detail="UI not found")
 
 
 @app.get("/")

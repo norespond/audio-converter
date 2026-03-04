@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Audio → WAV</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial;
+            margin: 0;
+            padding: 24px;
+            background: #f7f7fb
+        }
+
+        .card {
+            max-width: 720px;
+            margin: 24px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06)
+        }
+
+        .drop {
+            border: 2px dashed #d6d9e6;
+            padding: 40px;
+            text-align: center;
+            border-radius: 8px;
+            color: #475569
+        }
+
+        input[type=file] {
+            display: none
+        }
+
+        .btn {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 8px 14px;
+            background: #2563eb;
+            color: #fff;
+            border-radius: 6px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: #1e40af;
+        }
+
+        progress {
+            width: 100%;
+            height: 14px;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        progress::-webkit-progress-value {
+            background: #2563eb;
+        }
+
+        progress::-webkit-progress-bar {
+            background: #e2e8f0;
+        }
+
+        .meta {
+            margin-top: 12px;
+            color: #334155
+        }
+
+        #status {
+            margin-top: 8px;
+            font-size: 14px;
+            color: #475569;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <h2>音频转 WAV</h2>
+        <div id="drop" class="drop">
+            将文件拖拽到这里，或 <label class="btn" for="file">选择文件</label>
+            <input id="file" type="file" accept="audio/*" />
+            <div style="margin-top:12px">
+                <label for="format">输出格式：</label>
+                <select id="format">
+                    <option value="wav">wav</option>
+                    <option value="mp3">mp3</option>
+                    <option value="ogg">ogg</option>
+                    <option value="flac">flac</option>
+                    <option value="m4a">m4a</option>
+                    <option value="aac">aac</option>
+                    <option value="opus">opus</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="meta" id="meta"></div>
+        <div id="progressWrap" style="display:none;margin-top:12px">
+            <progress id="progress" value="0" max="100"></progress>
+            <div id="status"></div>
+        </div>
+    </div>
+
+    <script>
+        const drop = document.getElementById('drop')
+        const fileInput = document.getElementById('file')
+        const meta = document.getElementById('meta')
+        const progressWrap = document.getElementById('progressWrap')
+        const progress = document.getElementById('progress')
+        const status = document.getElementById('status')
+
+            ;['dragenter', 'dragover'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.style.background = '#eef2ff' }))
+            ;['dragleave', 'drop'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.style.background = '' }))
+        drop.addEventListener('drop', ev => { const f = ev.dataTransfer.files[0]; if (f) uploadFile(f) })
+        fileInput.addEventListener('change', e => { const f = e.target.files[0]; if (f) uploadFile(f) })
+
+        function uploadFile(file) {
+            // 前端校验
+            if (!file.type.startsWith("audio/")) {
+                status.textContent = "请选择音频文件"
+                return
+            }
+            if (file.size > 20 * 1024 * 1024) {
+                status.textContent = "文件超过 20MB 限制"
+                return
+            }
+
+            meta.textContent = `文件: ${file.name} · 大小: ${Math.round(file.size / 1024)} KB`
+            progressWrap.style.display = 'block'
+            progress.value = 0
+            status.textContent = '上传中...'
+
+            const xhr = new XMLHttpRequest()
+            xhr.open('POST', '/convert/')
+            xhr.responseType = 'blob'
+
+            xhr.upload.onprogress = e => { if (e.lengthComputable) { progress.value = (e.loaded / e.total) * 100 } }
+
+            xhr.onload = () => {
+                if (xhr.status === 200) {
+                    status.textContent = '转换完成'
+                    const blob = xhr.response
+                    const url = URL.createObjectURL(blob)
+                    status.innerHTML = `<a href="${url}" download="${file.name.replace(/\.[^/.]+$/, "")}.wav" class="btn">下载文件</a>`
+                } else {
+                    // 尝试解析错误信息
+                    const reader = new FileReader()
+                    reader.onload = () => {
+                        try {
+                            const err = JSON.parse(reader.result)
+                            status.textContent = `出错: ${err.detail || xhr.status}`
+                        } catch {
+                            status.textContent = `出错: ${xhr.status}`
+                        }
+                    }
+                    reader.readAsText(xhr.response)
+                }
+            }
+
+            xhr.onerror = () => { status.textContent = '请求失败' }
+
+            const fd = new FormData()
+            fd.append('file', file)
+            const fmt = document.getElementById('format').value || 'wav'
+            fd.append('format', fmt)
+            xhr.send(fd)
+        }
+    </script>
+</body>
+
+</html>
