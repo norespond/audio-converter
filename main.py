@@ -22,7 +22,7 @@ SUPPORTED_OUTPUTS = {
     'aac': 'audio/aac',
     'opus': 'audio/opus',
 }
-MAX_SIZE = 20 * 1024 * 1024  # 建议先限制 20MB
+MAX_SIZE = 40 * 1024 * 1024  # 建议先限制 40MB
 MAX_CONCURRENT = 2  # 最大并发转换数
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -39,7 +39,7 @@ async def save_file_with_limit(upload_file: UploadFile, path: str):
         while chunk := await upload_file.read(1024 * 1024):
             size += len(chunk)
             if size > MAX_SIZE:
-                raise HTTPException(status_code=413, detail="文件超过 20MB 限制")
+                raise HTTPException(status_code=413, detail="文件超过 40MB 限制")
             f.write(chunk)
 
 

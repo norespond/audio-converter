@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Audio → WAV</title>
+    <title>audio-converter</title>
     <style>
         body {
             font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial;
@@ -124,8 +124,8 @@
                 status.textContent = "请选择音频文件"
                 return
             }
-            if (file.size > 20 * 1024 * 1024) {
-                status.textContent = "文件超过 20MB 限制"
+            if (file.size > 40 * 1024 * 1024) {
+                status.textContent = "文件超过 40MB 限制"
                 return
             }
 
