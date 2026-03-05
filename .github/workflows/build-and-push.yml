@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 env:
-  IMAGE: ${{ secrets.REGISTRY }}/${{ secrets.IMAGE_NAME }}
+  IMAGE: ${{ secrets.IMAGE_NAME }}
 
 jobs:
   build:
@@ -34,6 +34,6 @@ jobs:
           context: .
           push: true
           tags: |
-            ${{ env.IMAGE }}:latest
+            ${{ secrets.REGISTRY }}/${{ env.IMAGE }}:latest
             ${{ env.IMAGE }}:${{ github.sha }}
           platforms: linux/amd64,linux/arm64
