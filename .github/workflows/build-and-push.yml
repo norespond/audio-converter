@@ -35,5 +35,5 @@ jobs:
           push: true
           tags: |
             ${{ secrets.REGISTRY }}/${{ env.IMAGE }}:latest
-            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ secrets.REGISTRY }}/${{ env.IMAGE }}:${{ github.sha }}
           platforms: linux/amd64,linux/arm64
