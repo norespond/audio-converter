@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>audio-converter</title>
+    <title>Audio → WAV</title>
     <style>
         body {
             font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial;
@@ -96,6 +96,23 @@
                     <option value="opus">opus</option>
                 </select>
             </div>
+            <div style="margin-top:12px">
+                <label for="bitrate">比特率：</label>
+                <input id="bitrate" type="number" value="192" /> kbps
+            </div>
+            <div style="margin-top:12px">
+                <label for="sample_rate">采样率：</label>
+                <input id="sample_rate" type="number" value="16000" />
+            </div>
+            <div style="margin-top:12px">
+                <label for="channels">声道：</label>
+                <select id="channels">
+                    <option value="1">单声道</option>
+                    <option value="2">双声道</option>
+                </select>
+            </div>
+
+
         </div>
 
         <div class="meta" id="meta"></div>
@@ -117,6 +134,14 @@
             ;['dragleave', 'drop'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.style.background = '' }))
         drop.addEventListener('drop', ev => { const f = ev.dataTransfer.files[0]; if (f) uploadFile(f) })
         fileInput.addEventListener('change', e => { const f = e.target.files[0]; if (f) uploadFile(f) })
+        const fd = new FormData()
+        fd.append('file', file)
+        fd.append('format', fmt)
+        fd.append('bitrate', document.getElementById('bitrate').value + 'k')
+        fd.append('sample_rate', document.getElementById('sample_rate').value)
+        fd.append('channels', document.getElementById('channels').value)
+        xhr.send(fd)
+
 
         function uploadFile(file) {
             // 前端校验
