@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>音频转换</title>
+  <link rel="icon" href="/static/favicon.ico" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+
+<body class="converter-page" data-family="audio">
+  <main class="shell">
+    <section class="hero">
+      <p class="eyebrow">Audio</p>
+      <h1 id="familyTitle">音频转换</h1>
+      <p id="familyHint">仅显示音频转换相关参数。</p>
+    </section>
+
+    <section class="card">
+      <div class="grid">
+        <div class="field">
+          <label for="input_mode">输入模式</label>
+          <select id="input_mode">
+            <option value="single">单文件</option>
+            <option value="multiple" selected>多文件</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="format">输出格式</label>
+          <select id="format"></select>
+        </div>
+        <div class="field" data-control="bitrate">
+          <label for="bitrate">比特率</label>
+          <select id="bitrate"></select>
+        </div>
+        <div class="field" data-control="sample_rate">
+          <label for="sample_rate">采样率</label>
+          <select id="sample_rate"></select>
+        </div>
+        <div class="field" data-control="channels">
+          <label for="channels">声道</label>
+          <select id="channels"></select>
+        </div>
+        <div class="field">
+          <label for="retention_minutes">保存时长</label>
+          <select id="retention_minutes"></select>
+        </div>
+      </div>
+
+      <div id="drop" class="drop" style="margin-top: 20px;">
+        <input id="file" type="file" accept="audio/*" multiple />
+        <div class="actions">
+          <label class="btn" for="file">选择文件</label>
+          <button id="confirmBtn" type="button" class="btn">确认并开始转换</button>
+          <button id="resetBtn" type="button" class="btn secondary">清空队列</button>
+        </div>
+        <div class="hint" style="margin-top:12px;">先选择参数，再添加文件并点击确认开始。</div>
+      </div>
+
+      <div id="summary" class="summary"></div>
+      <div class="overall">
+        <div class="overall-head">
+          <div class="overall-title">总进度：<span id="overallText">0%</span></div>
+          <div id="etaText" class="overall-meta">预计剩余时间：计算中</div>
+        </div>
+        <progress id="overallProgress" value="0" max="100"></progress>
+        <div id="retentionText" class="overall-meta"></div>
+      </div>
+      <div id="queue" class="queue"></div>
+    </section>
+  </main>
+
+  <script src="/static/script.js"></script>
+</body>
+
+</html>

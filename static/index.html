@@ -2,199 +2,63 @@
 <html lang="zh-CN">
 
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Audio → WAV</title>
-    <style>
-        body {
-            font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial;
-            margin: 0;
-            padding: 24px;
-            background: #f7f7fb
-        }
-
-        .card {
-            max-width: 720px;
-            margin: 24px auto;
-            padding: 20px;
-            background: #fff;
-            border-radius: 8px;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06)
-        }
-
-        .drop {
-            border: 2px dashed #d6d9e6;
-            padding: 40px;
-            text-align: center;
-            border-radius: 8px;
-            color: #475569
-        }
-
-        input[type=file] {
-            display: none
-        }
-
-        .btn {
-            display: inline-block;
-            margin-top: 12px;
-            padding: 8px 14px;
-            background: #2563eb;
-            color: #fff;
-            border-radius: 6px;
-            text-decoration: none;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .btn:hover {
-            background: #1e40af;
-        }
-
-        progress {
-            width: 100%;
-            height: 14px;
-            border-radius: 6px;
-            overflow: hidden;
-        }
-
-        progress::-webkit-progress-value {
-            background: #2563eb;
-        }
-
-        progress::-webkit-progress-bar {
-            background: #e2e8f0;
-        }
-
-        .meta {
-            margin-top: 12px;
-            color: #334155
-        }
-
-        #status {
-            margin-top: 8px;
-            font-size: 14px;
-            color: #475569;
-        }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>格式转换站</title>
+  <link rel="icon" href="/static/favicon.ico" />
+  <link rel="stylesheet" href="/static/styles.css" />
 </head>
 
-<body>
-    <div class="card">
-        <h2>音频转 WAV</h2>
-        <div id="drop" class="drop">
-            将文件拖拽到这里，或 <label class="btn" for="file">选择文件</label>
-            <input id="file" type="file" accept="audio/*" />
-            <div style="margin-top:12px">
-                <label for="format">输出格式：</label>
-                <select id="format">
-                    <option value="wav">wav</option>
-                    <option value="mp3">mp3</option>
-                    <option value="ogg">ogg</option>
-                    <option value="flac">flac</option>
-                    <option value="m4a">m4a</option>
-                    <option value="aac">aac</option>
-                    <option value="opus">opus</option>
-                </select>
-            </div>
-            <div style="margin-top:12px">
-                <label for="bitrate">比特率：</label>
-                <input id="bitrate" type="number" value="192" /> kbps
-            </div>
-            <div style="margin-top:12px">
-                <label for="sample_rate">采样率：</label>
-                <input id="sample_rate" type="number" value="16000" />
-            </div>
-            <div style="margin-top:12px">
-                <label for="channels">声道：</label>
-                <select id="channels">
-                    <option value="1">单声道</option>
-                    <option value="2">双声道</option>
-                </select>
-            </div>
+<body class="home-page">
+  <main class="home-shell">
+    <section class="home-hero">
+      <div>
+        <p class="eyebrow">Format Converter</p>
+        <h1>选择一种文件类型，直接进入对应转换页</h1>
+        <p class="home-lead">
+          这个站点只做格式转换，所以我们把入口拆开：音频、视频、图片各自有独立页面，界面更清爽，参数也更直观。
+        </p>
+      </div>
+    </section>
 
-
+    <section class="home-grid">
+      <a class="home-card" href="/audio">
+        <div class="home-card-top">
+          <h2>音频转换</h2>
+          <span class="home-pill">audio</span>
         </div>
+        <p>支持常见音频格式互转，并保留比特率、采样率和声道设置。</p>
+        <div class="home-formats">mp3 · wav · flac · ogg · m4a · aac · opus</div>
+      </a>
 
-        <div class="meta" id="meta"></div>
-        <div id="progressWrap" style="display:none;margin-top:12px">
-            <progress id="progress" value="0" max="100"></progress>
-            <div id="status"></div>
+      <a class="home-card" href="/video">
+        <div class="home-card-top">
+          <h2>视频转换</h2>
+          <span class="home-pill">video</span>
         </div>
-    </div>
+        <p>聚焦视频容器格式转换，界面只展示视频相关选项。</p>
+        <div class="home-formats">mp4 · webm · mkv · mov · avi</div>
+      </a>
 
-    <script>
-        const drop = document.getElementById('drop')
-        const fileInput = document.getElementById('file')
-        const meta = document.getElementById('meta')
-        const progressWrap = document.getElementById('progressWrap')
-        const progress = document.getElementById('progress')
-        const status = document.getElementById('status')
+      <a class="home-card" href="/image">
+        <div class="home-card-top">
+          <h2>图片转换</h2>
+          <span class="home-pill">image</span>
+        </div>
+        <p>处理常见静态图片格式转换，页面保持简洁。</p>
+        <div class="home-formats">png · jpg · jpeg · webp · bmp · gif · tif · tiff</div>
+      </a>
 
-            ;['dragenter', 'dragover'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.style.background = '#eef2ff' }))
-            ;['dragleave', 'drop'].forEach(e => drop.addEventListener(e, ev => { ev.preventDefault(); drop.style.background = '' }))
-        drop.addEventListener('drop', ev => { const f = ev.dataTransfer.files[0]; if (f) uploadFile(f) })
-        fileInput.addEventListener('change', e => { const f = e.target.files[0]; if (f) uploadFile(f) })
-        const fd = new FormData()
-        fd.append('file', file)
-        fd.append('format', fmt)
-        fd.append('bitrate', document.getElementById('bitrate').value + 'k')
-        fd.append('sample_rate', document.getElementById('sample_rate').value)
-        fd.append('channels', document.getElementById('channels').value)
-        xhr.send(fd)
-
-
-        function uploadFile(file) {
-            // 前端校验
-            if (!file.type.startsWith("audio/")) {
-                status.textContent = "请选择音频文件"
-                return
-            }
-            if (file.size > 40 * 1024 * 1024) {
-                status.textContent = "文件超过 40MB 限制"
-                return
-            }
-
-            meta.textContent = `文件: ${file.name} · 大小: ${Math.round(file.size / 1024)} KB`
-            progressWrap.style.display = 'block'
-            progress.value = 0
-            status.textContent = '上传中...'
-
-            const xhr = new XMLHttpRequest()
-            xhr.open('POST', '/convert/')
-            xhr.responseType = 'blob'
-
-            xhr.upload.onprogress = e => { if (e.lengthComputable) { progress.value = (e.loaded / e.total) * 100 } }
-
-            const fmt = document.getElementById('format').value || 'wav'
-            xhr.onload = () => {
-                if (xhr.status === 200) {
-                    status.textContent = '转换完成'
-                    const blob = xhr.response
-                    const url = URL.createObjectURL(blob)
-                    status.innerHTML = `<a href="${url}" download="${file.name.replace(/\.[^/.]+$/, "")}.${fmt}" class="btn">下载文件</a>`
-                } else {
-                    // 尝试解析错误信息
-                    const reader = new FileReader()
-                    reader.onload = () => {
-                        try {
-                            const err = JSON.parse(reader.result)
-                            status.textContent = `出错: ${err.detail || xhr.status}`
-                        } catch {
-                            status.textContent = `出错: ${xhr.status}`
-                        }
-                    }
-                    reader.readAsText(xhr.response)
-                }
-            }
-
-            xhr.onerror = () => { status.textContent = '请求失败' }
-
-            const fd = new FormData()
-            fd.append('file', file)
-            fd.append('format', fmt)
-            xhr.send(fd)
-        }
-    </script>
+      <a class="home-card" href="/document">
+        <div class="home-card-top">
+          <h2>文档转换</h2>
+          <span class="home-pill">document</span>
+        </div>
+        <p>仅做 txt、md、html 之间的基础互转，不引入复杂办公格式。</p>
+        <div class="home-formats">txt · md · html</div>
+      </a>
+    </section>
+  </main>
 </body>
 
 </html>
